@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tutor Bot - Admin Dashboard</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 AI Tutor Bot Dashboard</h1>
+            <nav>
+                <button class="nav-btn active" data-page="prompts">Prompts</button>
+                <button class="nav-btn" data-page="dialogs">Dialogs</button>
+                <button class="nav-btn" data-page="stats">Statistics</button>
+            </nav>
+        </header>
+
+        <!-- Prompts Page -->
+        <main id="prompts-page" class="page active">
+            <div class="page-header">
+                <h2>Prompt Management</h2>
+                <button id="create-prompt-btn" class="btn btn-primary">+ New Prompt</button>
+            </div>
+
+            <div id="active-prompt" class="active-prompt-card">
+                <h3>Active Prompt</h3>
+                <div id="active-prompt-content">
+                    <p class="text-muted">No active prompt selected</p>
+                </div>
+            </div>
+
+            <div id="prompts-list" class="prompts-list">
+                <!-- Prompts will be loaded here -->
+            </div>
+        </main>
+
+        <!-- Dialogs Page -->
+        <main id="dialogs-page" class="page">
+            <div class="page-header">
+                <h2>User Dialogs</h2>
+            </div>
+
+            <div id="users-list" class="users-list">
+                <!-- Users will be loaded here -->
+            </div>
+
+            <div id="dialog-viewer" class="dialog-viewer" style="display: none;">
+                <div class="dialog-header">
+                    <button id="back-to-users" class="btn btn-secondary">← Back</button>
+                    <h3 id="dialog-username"></h3>
+                </div>
+                <div id="messages-container" class="messages-container">
+                    <!-- Messages will be loaded here -->
+                </div>
+            </div>
+        </main>
+
+        <!-- Statistics Page -->
+        <main id="stats-page" class="page">
+            <div class="page-header">
+                <h2>Statistics</h2>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Users</h3>
+                    <p id="stat-total-users" class="stat-value">-</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Messages</h3>
+                    <p id="stat-total-messages" class="stat-value">-</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Today</h3>
+                    <p id="stat-active-today" class="stat-value">-</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Avg. Messages/User</h3>
+                    <p id="stat-avg-messages" class="stat-value">-</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Prompt Modal -->
+    <div id="prompt-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">New Prompt</h3>
+                <button class="close-btn">&times;</button>
+            </div>
+            <form id="prompt-form">
+                <div class="form-group">
+                    <label for="prompt-name">Name</label>
+                    <input type="text" id="prompt-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="prompt-content">Content</label>
+                    <textarea id="prompt-content" rows="10" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary close-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/app.js"></script>
+</body>
+</html>
