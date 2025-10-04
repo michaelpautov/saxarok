@@ -47,16 +47,31 @@ export class GeminiChatService {
     }));
 
     // Generate content with history
+    console.log('=== CALLING GEMINI API ===');
+    console.log('Model:', 'gemini-2.5-pro');
+    console.log('Config:', {
+      candidateCount: 1,
+      maxOutputTokens: 500,
+      temperature: 0.7,
+    });
+
     const result = await genAI.models.generateContent({
       model: 'gemini-2.5-pro',
       contents,
       config: {
         systemInstruction: systemPrompt,
-        candidateCount: 1, // Generate only 1 response variant
-        maxOutputTokens: 500, // Limit response length (~300-400 words)
-        temperature: 0.7, // More predictable responses
+        // TEMPORARILY REMOVED: Testing if these params block generation
+        // candidateCount: 1,
+        // maxOutputTokens: 500,
+        // temperature: 0.7,
       },
     });
+
+    console.log('=== GEMINI API RESULT ===');
+    console.log('Raw result:', JSON.stringify(result, null, 2));
+    console.log('Result.text:', result.text);
+    console.log('Result.candidates:', result.candidates);
+    console.log('=========================');
 
     const responseText = result.text || '';
 
