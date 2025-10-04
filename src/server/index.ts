@@ -43,6 +43,15 @@ export async function createServer() {
     timeWindow: '1 minute',
   });
 
+  // API Routes (register BEFORE static files)
+  await server.register(registerPromptRoutes, { prefix: '/api' });
+  await server.register(registerDialogRoutes, { prefix: '/api' });
+
+  // Health check
+  server.get('/health', async () => {
+    return { status: 'ok', timestamp: new Date().toISOString() };
+  });
+
   // Static files - serve React build
   const clientDistPath = join(process.cwd(), 'client', 'dist');
   await server.register(fastifyStatic, {
@@ -50,13 +59,12 @@ export async function createServer() {
     prefix: '/',
   });
 
-  // API Routes
-  await server.register(registerPromptRoutes, { prefix: '/api' });
-  await server.register(registerDialogRoutes, { prefix: '/api' });
-
-  // Health check
-  server.get('/health', async () => {
-    return { status: 'ok', timestamp: new Date().toISOString() };
+  // SPA fallback - serve index.html for all non-API routes
+  server.setNotFoundHandler(async (request, reply) => {
+    if (request.url.startsWith('/api')) {
+      return reply.code(404).send({ error: 'Not found' });
+    }
+    return reply.sendFile('index.html');
   });
 
   // Setup Telegram webhook
