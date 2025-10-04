@@ -128,7 +128,29 @@ export async function listDialogUsers(): Promise<string[]> {
   const { readdir } = await import('node:fs/promises');
   const files = await readdir(DIALOGS_DIR);
 
-  return files
-    .filter(f => f.endsWith('.json'))
-    .map(f => f.replace('.json', ''));
+  return files.filter((f) => f.endsWith('.json')).map((f) => f.replace('.json', ''));
+}
+
+/**
+ * Initializes default prompt if no prompts exist
+ */
+export async function initializeDefaultPrompt(): Promise<void> {
+  const prompts = await loadPrompts();
+
+  if (prompts.length === 0) {
+    console.log('No prompts found. Creating default prompt...');
+
+    const defaultPrompt: Prompt = {
+      id: crypto.randomUUID(),
+      name: 'Default Prompt',
+      content: 'You are a helpful AI assistant. Be concise, friendly, and professional.',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    await savePrompts([defaultPrompt]);
+    await setActivePromptId(defaultPrompt.id);
+
+    console.log('✅ Default prompt created and activated:', defaultPrompt.id);
+  }
 }

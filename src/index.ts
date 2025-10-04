@@ -1,10 +1,14 @@
 import { startServer } from './server/index.js';
 import { startBotPolling } from './bot/index.js';
 import { env } from './config/env.js';
+import { initializeDefaultPrompt } from './services/storage.js';
 
 async function main() {
   console.log('Starting AI Tutor Bot...');
   console.log(`Environment: ${env.NODE_ENV}`);
+
+  // Initialize default prompt if needed
+  await initializeDefaultPrompt();
 
   // Start web server
   await startServer();

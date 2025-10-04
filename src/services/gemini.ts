@@ -60,10 +60,9 @@ export class GeminiChatService {
       contents,
       config: {
         systemInstruction: systemPrompt,
-        // TEMPORARILY REMOVED: Testing if these params block generation
-        // candidateCount: 1,
-        // maxOutputTokens: 500,
-        // temperature: 0.7,
+        candidateCount: 1,
+        maxOutputTokens: 2048, // Enough for thinking tokens + response
+        temperature: 0.7,
       },
     });
 
