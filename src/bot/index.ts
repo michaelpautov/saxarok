@@ -1,4 +1,4 @@
-import { Bot, webhookCallback } from 'grammy';
+import { Bot } from 'grammy';
 import type { FastifyInstance } from 'fastify';
 import { env } from '../config/env.js';
 import { handleMessage, handleStart, handleClear, handleHelp } from './handlers.js';
@@ -25,8 +25,17 @@ export async function setupBotWebhook(server: FastifyInstance): Promise<void> {
   const webhookPath = '/telegram/webhook';
   const webhookUrl = `${env.WEBHOOK_DOMAIN}${webhookPath}`;
 
-  // Register webhook endpoint
-  server.post(webhookPath, webhookCallback(bot, 'fastify'));
+  // Register webhook endpoint with custom handler
+  // Returns 200 immediately to prevent Telegram retries
+  server.post(webhookPath, async (request, reply) => {
+    // Send immediate response to Telegram to prevent timeout retries
+    reply.code(200).send('OK');
+
+    // Process update asynchronously in background
+    bot.handleUpdate(request.body as any).catch((error) => {
+      console.error('Error processing webhook update:', error);
+    });
+  });
 
   // Set webhook
   await bot.api.setWebhook(webhookUrl, {

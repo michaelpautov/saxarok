@@ -2,6 +2,9 @@ import type { Context } from 'grammy';
 import { geminiService } from '../services/gemini.js';
 import { loadPrompts, getActivePromptId } from '../services/storage.js';
 
+// Track messages currently being processed to avoid duplicates from Telegram retries
+const processingMessages = new Set<number>();
+
 /**
  * Splits long messages into chunks for Telegram
  */
@@ -54,6 +57,17 @@ export async function handleMessage(ctx: Context): Promise<void> {
   if (!ctx.message?.text || !ctx.from) {
     return;
   }
+
+  const messageId = ctx.message.message_id;
+
+  // Check if this message is already being processed (duplicate webhook)
+  if (processingMessages.has(messageId)) {
+    console.log(`[DUPLICATE] Message ${messageId} already being processed, ignoring`);
+    return;
+  }
+
+  // Mark message as being processed
+  processingMessages.add(messageId);
 
   const userId = ctx.from.id.toString();
   const username = ctx.from.username || ctx.from.first_name || 'User';
@@ -124,6 +138,9 @@ export async function handleMessage(ctx: Context): Promise<void> {
     await ctx.reply('❌ Sorry, an error occurred processing your message. Please try again.', {
       parse_mode: 'HTML',
     });
+  } finally {
+    // Remove from processing set when done
+    processingMessages.delete(messageId);
   }
 }
 
