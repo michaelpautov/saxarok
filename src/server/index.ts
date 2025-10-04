@@ -54,6 +54,9 @@ export async function createServer() {
 
   // Static files - serve React build
   const clientDistPath = join(process.cwd(), 'client', 'dist');
+  console.log('Static files path:', clientDistPath);
+  console.log('Current working directory:', process.cwd());
+
   await server.register(fastifyStatic, {
     root: clientDistPath,
     prefix: '/',
