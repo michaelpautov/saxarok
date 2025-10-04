@@ -52,6 +52,9 @@ export class GeminiChatService {
       contents,
       config: {
         systemInstruction: systemPrompt,
+        candidateCount: 1, // Generate only 1 response variant
+        maxOutputTokens: 500, // Limit response length (~300-400 words)
+        temperature: 0.7, // More predictable responses
       },
     });
 
