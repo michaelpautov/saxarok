@@ -90,16 +90,20 @@ export async function handleMessage(ctx: Context): Promise<void> {
       activePrompt.content
     );
 
-    // Detect if AI generated multiple messages (separated by double newlines)
-    // and send only the FIRST one to prevent monologue
-    const messageSeparators = response.split(/\n\n(?=👋|🤔|💡|⚠️|✅|❌|❓)/);
-    if (messageSeparators.length > 1) {
-      // Multiple logical messages detected - send only first one
-      response = messageSeparators[0]!.trim();
-      console.log(
-        `[WARNING] AI generated ${messageSeparators.length} messages. Sending only first one.`
-      );
-    }
+    // DEBUG: Log full response from Gemini
+    console.log('=== GEMINI RESPONSE ===');
+    console.log('Length:', response.length);
+    console.log('Content:', response);
+    console.log('======================');
+
+    // TEMPORARILY DISABLED: Detect if AI generated multiple messages
+    // const messageSeparators = response.split(/\n\n(?=👋|🤔|💡|⚠️|✅|❌|❓)/);
+    // if (messageSeparators.length > 1) {
+    //   response = messageSeparators[0]!.trim();
+    //   console.log(
+    //     `[WARNING] AI generated ${messageSeparators.length} messages. Sending only first one.`
+    //   );
+    // }
 
     // Split long messages and send with HTML formatting
     const messageParts = splitMessage(response);
