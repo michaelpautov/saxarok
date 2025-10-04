@@ -42,6 +42,7 @@ export interface EnvConfig {
   LOG_LEVEL?: 'debug' | 'info' | 'warn' | 'error';
   MAX_CONTEXT_MESSAGES?: number;
   MAX_STORED_MESSAGES?: number;
+  GOOGLE_CLOUD_API_KEY?: string;
 }
 
 // API Request/Response Types

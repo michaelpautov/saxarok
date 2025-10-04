@@ -1,6 +1,8 @@
 import type { Context } from 'grammy';
 import { geminiService } from '../services/gemini.js';
+import { speechService } from '../services/speech.js';
 import { loadPrompts, getActivePromptId } from '../services/storage.js';
+import { env } from '../config/env.js';
 
 // Track messages currently being processed to avoid duplicates from Telegram retries
 const processingMessages = new Set<number>();
@@ -167,6 +169,121 @@ export async function handleStart(ctx: Context): Promise<void> {
       `👤 Напишите Ваше имя и Филиал.`,
     { parse_mode: 'HTML' }
   );
+}
+
+/**
+ * Handles incoming voice messages from users
+ */
+export async function handleVoiceMessage(ctx: Context): Promise<void> {
+  if (!ctx.message?.voice || !ctx.from) {
+    return;
+  }
+
+  const messageId = ctx.message.message_id;
+
+  // Check if this message is already being processed (duplicate webhook)
+  if (processingMessages.has(messageId)) {
+    console.log(`[DUPLICATE] Voice message ${messageId} already being processed, ignoring`);
+    return;
+  }
+
+  // Mark message as being processed
+  processingMessages.add(messageId);
+
+  const userId = ctx.from.id.toString();
+  const username = ctx.from.username || ctx.from.first_name || 'User';
+
+  try {
+    console.log('[VOICE] Received voice message from user:', username);
+    console.log('[VOICE] Duration:', ctx.message.voice.duration, 'seconds');
+
+    // Show typing indicator
+    await ctx.replyWithChatAction('typing');
+
+    // Step 1: Download audio file from Telegram
+    console.log('[VOICE] Downloading audio from Telegram...');
+    const file = await ctx.getFile();
+    const fileUrl = `https://api.telegram.org/file/bot${env.TELEGRAM_BOT_TOKEN}/${file.file_path}`;
+
+    const response = await fetch(fileUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to download audio: ${response.statusText}`);
+    }
+
+    const audioBuffer = Buffer.from(await response.arrayBuffer());
+    console.log('[VOICE] Audio downloaded, size:', audioBuffer.length, 'bytes');
+
+    // Step 2: Transcribe audio using Google Speech-to-Text
+    console.log('[VOICE] Transcribing audio...');
+    await ctx.replyWithChatAction('typing'); // Keep typing indicator active
+
+    const transcribedText = await speechService.transcribeAudio(
+      audioBuffer,
+      ctx.message.voice.mime_type || 'audio/ogg'
+    );
+
+    console.log('[VOICE] Transcription successful:', transcribedText);
+
+    // Step 3: Get active prompt
+    const activePromptId = await getActivePromptId();
+    if (!activePromptId) {
+      await ctx.reply('⚠️ No active prompt configured. Please contact administrator.', {
+        parse_mode: 'HTML',
+      });
+      return;
+    }
+
+    const prompts = await loadPrompts();
+    const activePrompt = prompts.find((p) => p.id === activePromptId);
+
+    if (!activePrompt) {
+      await ctx.reply('⚠️ Active prompt not found. Please contact administrator.', {
+        parse_mode: 'HTML',
+      });
+      return;
+    }
+
+    // Step 4: Process transcribed text with Gemini AI
+    console.log('[VOICE] Processing with Gemini AI...');
+    await ctx.replyWithChatAction('typing');
+
+    const aiResponse = await geminiService.sendMessage(
+      userId,
+      username,
+      transcribedText,
+      activePrompt.content
+    );
+
+    console.log('[VOICE] AI response received, length:', aiResponse.length);
+
+    // Step 5: Send response to user
+    const messageParts = splitMessage(aiResponse);
+
+    for (let i = 0; i < messageParts.length; i++) {
+      const part = messageParts[i];
+      if (part) {
+        await ctx.reply(part, { parse_mode: 'HTML' });
+
+        // Small delay between parts to avoid rate limiting
+        if (i < messageParts.length - 1) {
+          await delay(1000);
+        }
+      }
+    }
+
+    console.log('[VOICE] Voice message processing completed successfully');
+  } catch (error) {
+    console.error('[VOICE] Error handling voice message:', error);
+    await ctx.reply(
+      '❌ Не удалось обработать голосовое сообщение. Пожалуйста, попробуйте ещё раз или отправьте текстовое сообщение.',
+      {
+        parse_mode: 'HTML',
+      }
+    );
+  } finally {
+    // Remove from processing set when done
+    processingMessages.delete(messageId);
+  }
 }
 
 /**

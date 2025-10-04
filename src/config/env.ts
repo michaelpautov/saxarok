@@ -35,6 +35,7 @@ export function validateEnv(): EnvConfig {
   return {
     TELEGRAM_BOT_TOKEN: process.env['TELEGRAM_BOT_TOKEN']!,
     GEMINI_API_KEY: process.env['GEMINI_API_KEY']!,
+    GOOGLE_CLOUD_API_KEY: process.env['GOOGLE_CLOUD_API_KEY'] || process.env['GEMINI_API_KEY']!,
     PORT: port,
     NODE_ENV: nodeEnv,
     WEBHOOK_DOMAIN: process.env['WEBHOOK_DOMAIN']!,

@@ -1,7 +1,13 @@
 import { Bot } from 'grammy';
 import type { FastifyInstance } from 'fastify';
 import { env } from '../config/env.js';
-import { handleMessage, handleStart, handleClear, handleHelp } from './handlers.js';
+import {
+  handleMessage,
+  handleVoiceMessage,
+  handleStart,
+  handleClear,
+  handleHelp,
+} from './handlers.js';
 
 const bot = new Bot(env.TELEGRAM_BOT_TOKEN);
 
@@ -10,8 +16,9 @@ bot.command('start', handleStart);
 bot.command('clear', handleClear);
 bot.command('help', handleHelp);
 
-// Register message handler
+// Register message handlers
 bot.on('message:text', handleMessage);
+bot.on('message:voice', handleVoiceMessage);
 
 // Error handler
 bot.catch((err) => {
