@@ -8,6 +8,25 @@ import { env } from '../config/env.js';
 const processingMessages = new Set<number>();
 
 /**
+ * Converts basic Markdown formatting to HTML (fallback for AI responses)
+ * Handles: **bold**, *italic*, __bold__, _italic_, `code`
+ * This ensures formatting works even if AI uses Markdown instead of HTML
+ */
+function markdownToHTML(text: string): string {
+  return (
+    text
+      // **bold** or __bold__ → <b>bold</b>
+      .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+      .replace(/__(.+?)__/g, '<b>$1</b>')
+      // *italic* or _italic_ → <i>italic</i> (but not inside words)
+      .replace(/(?<!\w)\*([^*]+?)\*(?!\w)/g, '<i>$1</i>')
+      .replace(/(?<!\w)_([^_]+?)_(?!\w)/g, '<i>$1</i>')
+      // `code` → <code>code</code>
+      .replace(/`(.+?)`/g, '<code>$1</code>')
+  );
+}
+
+/**
  * Splits long messages into chunks for Telegram
  */
 function splitMessage(text: string, maxLength = 4000): string[] {
@@ -106,20 +125,14 @@ export async function handleMessage(ctx: Context): Promise<void> {
       activePrompt.content
     );
 
+    // Convert Markdown to HTML (fallback if AI uses Markdown despite instructions)
+    response = markdownToHTML(response);
+
     // DEBUG: Log full response from Gemini
     console.log('=== GEMINI RESPONSE ===');
     console.log('Length:', response.length);
     console.log('Content:', response);
     console.log('======================');
-
-    // TEMPORARILY DISABLED: Detect if AI generated multiple messages
-    // const messageSeparators = response.split(/\n\n(?=👋|🤔|💡|⚠️|✅|❌|❓)/);
-    // if (messageSeparators.length > 1) {
-    //   response = messageSeparators[0]!.trim();
-    //   console.log(
-    //     `[WARNING] AI generated ${messageSeparators.length} messages. Sending only first one.`
-    //   );
-    // }
 
     // Split long messages and send with HTML formatting
     const messageParts = splitMessage(response);
@@ -247,12 +260,15 @@ export async function handleVoiceMessage(ctx: Context): Promise<void> {
     console.log('[VOICE] Processing with Gemini AI...');
     await ctx.replyWithChatAction('typing');
 
-    const aiResponse = await geminiService.sendMessage(
+    let aiResponse = await geminiService.sendMessage(
       userId,
       username,
       transcribedText,
       activePrompt.content
     );
+
+    // Convert Markdown to HTML (fallback if AI uses Markdown despite instructions)
+    aiResponse = markdownToHTML(aiResponse);
 
     console.log('[VOICE] AI response received, length:', aiResponse.length);
 
