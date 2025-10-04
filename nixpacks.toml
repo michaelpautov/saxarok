@@ -4,9 +4,7 @@ nixPkgs = ["nodejs_22", "pnpm"]
 [phases.build]
 cmds = [
   "pnpm install",
-  "cd client && pnpm install",
-  "rm -rf client/dist",
-  "pnpm run build"
+  "pnpm run build:server"
 ]
 
 [start]

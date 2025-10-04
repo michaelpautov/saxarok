@@ -4,7 +4,9 @@ pnpm-lock.yaml
 
 # Build output
 dist/
+!client/dist/
 *.js
+!client/dist/**/*.js
 *.d.ts
 *.map
 
