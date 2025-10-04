@@ -26,7 +26,7 @@ export async function setupBotWebhook(server: FastifyInstance): Promise<void> {
   const webhookUrl = `${env.WEBHOOK_DOMAIN}${webhookPath}`;
 
   // Initialize bot before setting up webhook handler
-  await bot.api.getMe();
+  await bot.init();
 
   // Register webhook endpoint with custom handler
   // Returns 200 immediately to prevent Telegram retries
